@@ -1,67 +1,69 @@
-const express = require('express');
-const path = require('path');
-const cors = require('cors');
+const express = require("express");
+const path = require("path");
+const cors = require("cors");
 const router = express.Router();
-const bodyParser = require('body-parser');
-const nodemailer = require('nodemailer');
-const compression = require('compression');
+const bodyParser = require("body-parser");
+const nodemailer = require("nodemailer");
+const compression = require("compression");
 
 const app = express();
 const port = 8080;
 
-app.use(cors());
-app.use(compression());
+// Middleware to parse JSON bodies
+app.use(express.json());
 
-// Have Node serve the files for our built React app
-app.use(express.static(path.resolve(__dirname, '../public')));
+// Middleware to parse URL-encoded bodies
+app.use(express.urlencoded({ extended: true }));
 
-// parse application/x-www-form-urlencoded
-app.use(bodyParser.urlencoded({ extended: false }));
+app.get("/", (req, res) => {
+  console.log("started");
+  res.send("started");
+});
 
-// parse application/json
-app.use(bodyParser.json());
+app.post("/send-email", (req, res) => {
+  const { name, company, email, message } = req.body || {};
 
-// Handle GET requests to /api route
-app.post('/api/send-email', (req, res) => {
-    const { name, company, email, message } = req.body;
+  if (!(name && company && message && email && email.includes("@"))) {
+    return res.send("invalid data");
+  }
 
-    const transporter = nodemailer.createTransport({
-        host: 'smtp.gmail.com',
-        port: 587,
-        auth: {
-            user: process.env.SMTP_EMAIL,
-            pass: process.env.SMTP_PASSWORD,
-        },
-    });
+  const transporter = nodemailer.createTransport({
+    host: "smtp.gmail.com",
+    port: 587,
+    auth: {
+      user: process.env.SMTP_EMAIL,
+      pass: process.env.SMTP_PASSWORD,
+    },
+  });
 
-    transporter
-        .verify()
-        .then(() => {
-            transporter
-                .sendMail({
-                    from: `"${name}" <smtp.danielwust@gmail.com>`, // sender address
-                    to: 'contato@danielwust.com, smtp.danielwust@gmail.com', // list of receivers
-                    subject: `${name} <${email}> ${
-                        company ? `from ${company}` : ''
-                    } submitted a contact form`, // Subject line
-                    text: `${message}`, // plain text body
-                })
-                .then((info) => {
-                    console.log({ info });
-                    res.json({ message: 'success' });
-                })
-                .catch((e) => {
-                    console.error(e);
-                    res.status(500).send(e);
-                });
+  transporter
+    .verify()
+    .then(() => {
+      transporter
+        .sendMail({
+          from: `"${name}" <smtp.danielwust@gmail.com>`, // sender address
+          to: "contato@danielwust.com, smtp.danielwust@gmail.com", // list of receivers
+          subject: `${name} <${email}> ${
+            company ? `from ${company}` : ""
+          } submitted a contact form`, // Subject line
+          text: `${message}`, // plain text body
+        })
+        .then((info) => {
+          console.log({ info });
+          res.json({ message: "success" });
         })
         .catch((e) => {
-            console.error(e);
-            res.status(500).send(e);
+          console.error(e);
+          res.status(500).send(e);
         });
+    })
+    .catch((e) => {
+      console.error(e);
+      res.status(500).send(e);
+    });
 });
 
 // listen to app on port 8080
 app.listen(port, () => {
-    console.log(`Server is listening on port ${port}`);
+  console.log(`Server is listening on port ${port}`);
 });
