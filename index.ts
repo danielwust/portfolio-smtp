@@ -1,16 +1,18 @@
-const express = require("express");
-const path = require("path");
 const cors = require("cors");
-const router = express.Router();
-const bodyParser = require("body-parser");
+const express = require("express");
 const nodemailer = require("nodemailer");
+const bodyParser = require("body-parser");
 const compression = require("compression");
 
 const app = express();
-const port = 8080;
+const router = express.Router();
+const port = parseInt(process.env.SMTP_EMAIL || '0') || 8080;
+
+app.use(cors());
+app.use(compression());
 
 // Middleware to parse JSON bodies
-app.use(express.json());
+app.use(bodyParser.json());
 
 // Middleware to parse URL-encoded bodies
 app.use(express.urlencoded({ extended: true }));
