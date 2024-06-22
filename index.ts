@@ -26,7 +26,7 @@ app.post("/send-email", (req, res) => {
   const { name, company, email, message } = req.body || {};
 
   if (!(name && company && message && email && email.includes("@"))) {
-    return res.send("invalid data");
+    return res.send({ error: "Invalid Data Provided" });
   }
 
   const transporter = nodemailer.createTransport({
@@ -52,7 +52,7 @@ app.post("/send-email", (req, res) => {
         })
         .then((info) => {
           console.log({ info });
-          res.json({ message: "success" });
+          res.json({ message: "success", success: true });
         })
         .catch((e) => {
           console.error(e);
